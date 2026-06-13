@@ -252,6 +252,52 @@ class BackoffState:
         return self.backoff_until > 0.0
 
 
+def compute_current_and_action(
+    observed_current: float | None,
+    setpoint: int,
+    mode: ZoneMode,
+    *,
+    assume_from_target: bool,
+) -> tuple[float | None, str | None]:
+    """Compute the climate entity's displayed current temperature and action.
+
+    HomeKit thermostats require a current-temperature value; a zone whose panel
+    has no sensor reports ``None``, which the HomeKit bridge renders as a
+    misleading fallback (~21 °C). When ``assume_from_target`` is set, we
+    substitute the setpoint as the current temperature for such zones so the
+    HomeKit dial reads sensibly, and light the "heating" indicator while on
+    (the panel is energised toward the setpoint even though we can't measure
+    the room).
+
+    Returns ``(current_temperature, action)`` where action is one of
+    ``"off"``, ``"heating"``, ``"idle"`` or ``None`` (unknown — no sensor and
+    no substitution).
+
+    Zones that report a real sensor value are unaffected: the substitution only
+    applies when ``observed_current is None``.
+    """
+    current = observed_current
+    synthesized = False
+    if current is None and assume_from_target:
+        current = float(setpoint)
+        synthesized = True
+
+    if mode == "off":
+        action: str | None = "off"
+    elif current is None:
+        # Heat mode, no sensor, and substitution disabled: can't infer.
+        action = None
+    elif synthesized:
+        # Sensorless zone, on: assume the panel is heating toward setpoint.
+        action = "heating"
+    elif current < setpoint:
+        action = "heating"
+    else:
+        action = "idle"
+
+    return current, action
+
+
 def initial_desired_from_hub(
     current_mode: str,
     comfort_c: int,

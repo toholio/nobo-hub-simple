@@ -296,3 +296,64 @@ def test_profile_matches():
     assert r.profile_matches(["00001"] * 7, ["00001"] * 7)
     assert not r.profile_matches(["00004"] * 7, ["00001"] * 7)
     assert not r.profile_matches(None, ["00001"] * 7)
+
+
+# --- displayed current temperature & action (HomeKit sensorless handling) ---
+
+
+def test_real_sensor_below_setpoint_heating():
+    assert r.compute_current_and_action(18.0, 21, "heat", assume_from_target=True) == (
+        18.0,
+        "heating",
+    )
+
+
+def test_real_sensor_at_or_above_setpoint_idle():
+    assert r.compute_current_and_action(22.0, 21, "heat", assume_from_target=True) == (
+        22.0,
+        "idle",
+    )
+
+
+def test_real_sensor_off_reports_off_and_keeps_reading():
+    assert r.compute_current_and_action(19.5, 21, "off", assume_from_target=True) == (
+        19.5,
+        "off",
+    )
+
+
+def test_sensorless_heat_substitutes_setpoint_and_lights_flame():
+    # No sensor, substitution on, zone on -> show setpoint, indicate heating.
+    assert r.compute_current_and_action(None, 21, "heat", assume_from_target=True) == (
+        21.0,
+        "heating",
+    )
+
+
+def test_sensorless_off_substitutes_setpoint_action_off():
+    assert r.compute_current_and_action(None, 21, "off", assume_from_target=True) == (
+        21.0,
+        "off",
+    )
+
+
+def test_sensorless_substitution_disabled_reports_none():
+    # Substitution off: stay truthful (None), can't infer action while on.
+    assert r.compute_current_and_action(None, 21, "heat", assume_from_target=False) == (
+        None,
+        None,
+    )
+
+
+def test_sensorless_off_substitution_disabled_still_off():
+    assert r.compute_current_and_action(None, 21, "off", assume_from_target=False) == (
+        None,
+        "off",
+    )
+
+
+def test_real_sensor_unaffected_by_substitution_flag():
+    # A real reading is never overwritten regardless of the flag.
+    assert r.compute_current_and_action(18.0, 21, "heat", assume_from_target=True) == (
+        r.compute_current_and_action(18.0, 21, "heat", assume_from_target=False)
+    )

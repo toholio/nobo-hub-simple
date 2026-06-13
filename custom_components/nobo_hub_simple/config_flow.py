@@ -32,10 +32,12 @@ from .const import (
     CONF_CLEAR_GLOBAL_OVERRIDES,
     CONF_MANAGED_ZONES,
     CONF_POLL_INTERVAL,
+    CONF_REPORT_SETPOINT_AS_CURRENT,
     CONF_SERIAL,
     DEFAULT_BLOCK_OVERRIDES,
     DEFAULT_CLEAR_GLOBAL_OVERRIDES,
     DEFAULT_POLL_INTERVAL,
+    DEFAULT_REPORT_SETPOINT_AS_CURRENT,
     DOMAIN,
     MAX_POLL_INTERVAL,
     MIN_POLL_INTERVAL,
@@ -234,6 +236,13 @@ class OptionsFlowHandler(OptionsFlow):
                     CONF_CLEAR_GLOBAL_OVERRIDES,
                     default=options.get(
                         CONF_CLEAR_GLOBAL_OVERRIDES, DEFAULT_CLEAR_GLOBAL_OVERRIDES
+                    ),
+                ): BooleanSelector(),
+                vol.Required(
+                    CONF_REPORT_SETPOINT_AS_CURRENT,
+                    default=options.get(
+                        CONF_REPORT_SETPOINT_AS_CURRENT,
+                        DEFAULT_REPORT_SETPOINT_AS_CURRENT,
                     ),
                 ): BooleanSelector(),
                 vol.Required(
