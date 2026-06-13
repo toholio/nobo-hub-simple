@@ -29,11 +29,19 @@ from .const import (
     MIN_TEMPERATURE,
 )
 from .entity import NoboBaseEntity
-from .reconcile import clamp_setpoint
+from .reconcile import clamp_setpoint, compute_current_and_action
 
 # Writes are serialized inside the reconciler (single asyncio lock), so the
 # platform does not need its own update parallelism limit beyond this.
 PARALLEL_UPDATES = 0
+
+# Maps the pure helper's action string to the HVACAction enum.
+_ACTION_MAP = {
+    "off": HVACAction.OFF,
+    "heating": HVACAction.HEATING,
+    "idle": HVACAction.IDLE,
+    None: None,
+}
 
 
 async def async_setup_entry(
@@ -132,20 +140,16 @@ class NoboZoneClimate(NoboBaseEntity, ClimateEntity):
         )
         self._attr_target_temperature = desired.setpoint
 
-        current = hub.get_current_zone_temperature(self._id)
-        self._attr_current_temperature = (
-            None if current is None else float(current)
+        raw = hub.get_current_zone_temperature(self._id)
+        observed = None if raw is None else float(raw)
+        current, action = compute_current_and_action(
+            observed,
+            desired.setpoint,
+            desired.mode,
+            assume_from_target=self._reconciler.report_setpoint_as_current,
         )
-
-        if desired.mode == "off":
-            self._attr_hvac_action = HVACAction.OFF
-        elif self._attr_current_temperature is None:
-            # No sensor in this zone: can't infer heating vs idle.
-            self._attr_hvac_action = None
-        elif self._attr_current_temperature < desired.setpoint:
-            self._attr_hvac_action = HVACAction.HEATING
-        else:
-            self._attr_hvac_action = HVACAction.IDLE
+        self._attr_current_temperature = current
+        self._attr_hvac_action = _ACTION_MAP[action]
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

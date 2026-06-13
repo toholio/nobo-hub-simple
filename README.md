@@ -83,6 +83,7 @@ repairs them if it detects tampering.
 | **Managed zones** | all zones | Only these zones get a climate entity and are enforced. Unmanaged zones are left completely untouched. |
 | **Block overrides from the Nobø app** | on | Sets `override_allowed = NOT_ALLOWED` on managed zones so the hub itself refuses app overrides — most enforcement then happens for free. |
 | **Clear global overrides** | on | Also resets any non-normal *global* override back to normal. Note this affects unmanaged zones too. |
+| **Report setpoint as current temperature** | on | For zones whose panel has **no temperature sensor**, show the target temperature as the current temperature (and light the heating indicator while on) instead of reporting nothing. See below. Zones that have a sensor are unaffected. |
 | **Safety-net poll interval** | 120 s | How often (60–600 s) to re-check the hub in addition to instant push enforcement. |
 
 Changing options reloads the integration. Removing a zone from *Managed zones*
@@ -103,6 +104,15 @@ managing it until you re-add it via options. Field: `zone_id`.
   quick-override buttons are disabled for managed zones; to change a zone during
   an HA outage, edit the zone's comfort temperature or week profile in the app's
   zone settings, or use the `restore_zone` service before a long absence.
+- **Zones without a temperature sensor.** Many Nobø panels are receivers with no
+  sensor, so the zone reports no current temperature. A HomeKit thermostat
+  always needs a current-temperature value, so the HomeKit bridge would
+  otherwise show a misleading fallback (~21 °C). The **Report setpoint as current
+  temperature** option (on by default) makes such zones report their target as
+  the current temperature and light the heating indicator while on. Zones that
+  *do* have a sensor always report the real reading. Turn the option off if you
+  prefer the entity to report no current temperature (e.g. you template it
+  yourself).
 - **HomeKit minimum setpoint is 10 °C.** You can set 7–9 °C from Home Assistant,
   but the iOS Home app may clamp/display it at 10 °C.
 - **Setpoints are whole degrees, 7–30 °C.** Fractional values from the UI are

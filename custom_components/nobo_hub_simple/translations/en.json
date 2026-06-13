@@ -55,12 +55,14 @@
           "managed_zones": "Managed zones",
           "block_overrides": "Block overrides from the Nobø app",
           "clear_global_overrides": "Clear global overrides",
+          "report_setpoint_as_current": "Report setpoint as current temperature (zones without a sensor)",
           "poll_interval": "Safety-net poll interval"
         },
         "data_description": {
           "managed_zones": "Zones this integration controls. Each becomes an Off/Heat thermostat. Unmanaged zones are left untouched. Removing a zone restores its original week profile.",
           "block_overrides": "Set the hub to reject app overrides on managed zones, so the integration's state is enforced automatically. Recommended.",
           "clear_global_overrides": "Also reset any non-normal global override back to normal. This affects unmanaged zones too.",
+          "report_setpoint_as_current": "For zones whose panel has no temperature sensor, show the target temperature as the current temperature instead of nothing. This avoids HomeKit displaying a misleading fallback value, and lights the heating indicator while the zone is on. Zones that do have a sensor are unaffected.",
           "poll_interval": "How often (seconds) to re-check the hub as a safety net, in addition to the instant push-driven enforcement."
         },
         "description": "Configure which zones are managed and how external changes are handled."

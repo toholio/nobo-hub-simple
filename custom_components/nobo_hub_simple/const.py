@@ -12,10 +12,12 @@ CONF_MANAGED_ZONES: Final = "managed_zones"
 CONF_BLOCK_OVERRIDES: Final = "block_overrides"
 CONF_CLEAR_GLOBAL_OVERRIDES: Final = "clear_global_overrides"
 CONF_POLL_INTERVAL: Final = "poll_interval"
+CONF_REPORT_SETPOINT_AS_CURRENT: Final = "report_setpoint_as_current"
 
 DEFAULT_BLOCK_OVERRIDES: Final = True
 DEFAULT_CLEAR_GLOBAL_OVERRIDES: Final = True
 DEFAULT_POLL_INTERVAL: Final = 120
+DEFAULT_REPORT_SETPOINT_AS_CURRENT: Final = True
 MIN_POLL_INTERVAL: Final = 60
 MAX_POLL_INTERVAL: Final = 600
 

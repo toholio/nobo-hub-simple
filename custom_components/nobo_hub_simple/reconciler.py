@@ -41,9 +41,11 @@ from .const import (
     CONF_CLEAR_GLOBAL_OVERRIDES,
     CONF_MANAGED_ZONES,
     CONF_POLL_INTERVAL,
+    CONF_REPORT_SETPOINT_AS_CURRENT,
     DEFAULT_BLOCK_OVERRIDES,
     DEFAULT_CLEAR_GLOBAL_OVERRIDES,
     DEFAULT_POLL_INTERVAL,
+    DEFAULT_REPORT_SETPOINT_AS_CURRENT,
     DOMAIN,
     FIGHT_THRESHOLD,
     FIGHT_WINDOW_S,
@@ -127,6 +129,12 @@ class NoboReconciler:
     @property
     def poll_interval(self) -> int:
         return int(self._options.get(CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL))
+
+    @property
+    def report_setpoint_as_current(self) -> bool:
+        return self._options.get(
+            CONF_REPORT_SETPOINT_AS_CURRENT, DEFAULT_REPORT_SETPOINT_AS_CURRENT
+        )
 
     @property
     def managed_zones(self) -> list[str]:
