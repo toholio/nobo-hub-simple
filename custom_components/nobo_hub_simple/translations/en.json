@@ -1,0 +1,82 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect - check serial number",
+      "cannot_connect_ip": "Failed to connect - check IP address",
+      "invalid_ip": "Invalid IP address",
+      "invalid_serial": "Invalid serial number",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "manual": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "serial": "Serial number (12 digits)"
+        },
+        "data_description": {
+          "ip_address": "The IP address of your Nobø Ecohub.",
+          "serial": "The full 12-digit serial number printed on the back of your Nobø Ecohub."
+        },
+        "description": "Configure a Nobø Ecohub not discovered on your local network. Enter the complete serial number (12 digits) and its IP address."
+      },
+      "selected": {
+        "data": {
+          "serial_suffix": "Serial number suffix (3 digits)"
+        },
+        "data_description": {
+          "serial_suffix": "The last 3 digits of the serial number printed on the back of your Nobø Ecohub."
+        },
+        "description": "Configuring {hub}.\n\nTo connect to the hub, enter the last 3 digits of the hub's serial number."
+      },
+      "user": {
+        "data": {
+          "device": "Discovered hubs"
+        },
+        "data_description": {
+          "device": "Select the Nobø Ecohub discovered on your local network, or choose manual entry."
+        },
+        "description": "Select Nobø Ecohub to configure."
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to connect to Nobø Ecohub with serial {serial} at {ip}; will retry. If the hub is on a different network from Home Assistant and has changed IP address, remove and re-add the integration."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "managed_zones": "Managed zones",
+          "block_overrides": "Block overrides from the Nobø app",
+          "clear_global_overrides": "Clear global overrides",
+          "poll_interval": "Safety-net poll interval"
+        },
+        "data_description": {
+          "managed_zones": "Zones this integration controls. Each becomes an Off/Heat thermostat. Unmanaged zones are left untouched. Removing a zone restores its original week profile.",
+          "block_overrides": "Set the hub to reject app overrides on managed zones, so the integration's state is enforced automatically. Recommended.",
+          "clear_global_overrides": "Also reset any non-normal global override back to normal. This affects unmanaged zones too.",
+          "poll_interval": "How often (seconds) to re-check the hub as a safety net, in addition to the instant push-driven enforcement."
+        },
+        "description": "Configure which zones are managed and how external changes are handled."
+      }
+    }
+  },
+  "services": {
+    "restore_zone": {
+      "name": "Restore zone",
+      "description": "Restore a zone to its pre-takeover week profile and override setting, and stop managing it until reconfigured.",
+      "fields": {
+        "zone_id": {
+          "name": "Zone ID",
+          "description": "The Nobø zone id to restore."
+        }
+      }
+    }
+  }
+}
