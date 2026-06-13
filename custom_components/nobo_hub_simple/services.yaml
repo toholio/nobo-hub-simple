@@ -1,0 +1,7 @@
+restore_zone:
+  fields:
+    zone_id:
+      required: true
+      example: "1"
+      selector:
+        text:

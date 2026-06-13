@@ -1,0 +1,12 @@
+{
+  "domain": "nobo_hub_simple",
+  "name": "Nobø Ecohub (Simple)",
+  "codeowners": ["@tobin-richard"],
+  "config_flow": true,
+  "documentation": "https://github.com/tobin-richard/nobo-hub-simple",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/tobin-richard/nobo-hub-simple/issues",
+  "requirements": ["pynobo==1.9.0"],
+  "version": "0.1.0"
+}
