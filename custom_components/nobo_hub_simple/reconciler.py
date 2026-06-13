@@ -354,6 +354,10 @@ class NoboReconciler:
         except (TypeError, ValueError):
             return default
 
+    def _zone_name(self, zone_id: str) -> str:
+        """Human-readable zone name for log lines (zone_id as fallback)."""
+        return _normalize_name(self.hub.zones.get(zone_id, {}).get("name", zone_id))
+
     # -- Hub event callbacks (run on HA event loop) --------------------------
 
     @callback
@@ -365,6 +369,9 @@ class NoboReconciler:
     @callback
     def _on_connection(self, _hub: nobo, connected: bool) -> None:
         """Connection state changed."""
+        _LOGGER.info(
+            "Hub connection %s", "restored" if connected else "lost"
+        )
         self._connected = connected
         async_dispatcher_send(self.hass, signal_update(self.entry.entry_id))
         if connected:
@@ -426,10 +433,16 @@ class NoboReconciler:
             ),
         )
         if backoff.should_skip(now):
+            _LOGGER.debug(
+                "Zone %s: in fight-backoff for %.1fs more, skipping reconcile",
+                self._zone_name(zone_id),
+                backoff.backoff_until - now,
+            )
             return
 
+        observed = self._observe(zone_id)
         plan = compute_zone_plan(
-            self._observe(zone_id),
+            observed,
             desired,
             self._profiles,
             block_overrides=self.block_overrides,
@@ -437,6 +450,12 @@ class NoboReconciler:
         )
 
         if plan is None:
+            _LOGGER.debug(
+                "Zone %s: in sync (observed=%s, desired=%s)",
+                self._zone_name(zone_id),
+                observed,
+                desired,
+            )
             self._pending_profile.pop(zone_id, None)
             backoff.note_clean(now)
             return
@@ -456,8 +475,19 @@ class NoboReconciler:
             and pending[0] == plan.week_profile_id
             and now - pending[1] < PROFILE_ECHO_GRACE_S
         ):
+            _LOGGER.debug(
+                "Zone %s: awaiting hub echo of week profile %s, not re-sending",
+                self._zone_name(zone_id),
+                plan.week_profile_id,
+            )
             return
 
+        _LOGGER.debug(
+            "Zone %s: drift detected (desired=%s), correcting with %s",
+            self._zone_name(zone_id),
+            desired,
+            plan.kwargs(),
+        )
         try:
             await self.hub.async_update_zone(zone_id, **plan.kwargs())
         except PynoboError as err:
@@ -490,6 +520,7 @@ class NoboReconciler:
             global_target_id=nobo.API.OVERRIDE_ID_NONE,
         )
         for clear in clears:
+            _LOGGER.debug("Clearing stray override back to normal: %s", clear)
             try:
                 await self.hub.async_create_override(
                     nobo.API.OVERRIDE_MODE_NORMAL,
@@ -506,6 +537,12 @@ class NoboReconciler:
         """Set HEAT or OFF for a zone and enforce immediately."""
         current = self._desired.get(zone_id)
         setpoint = current.setpoint if current else MIN_TEMPERATURE
+        _LOGGER.debug(
+            "HA command: set zone %s mode=%s (setpoint=%s)",
+            self._zone_name(zone_id),
+            mode,
+            setpoint,
+        )
         self._desired[zone_id] = DesiredZoneState(mode=mode, setpoint=setpoint)
         await self._async_save()
         await self.async_reconcile_zone(zone_id)
@@ -515,6 +552,11 @@ class NoboReconciler:
 
         Setting a temperature implies HEAT (a zone with a setpoint is on).
         """
+        _LOGGER.debug(
+            "HA command: set zone %s setpoint=%s (heat)",
+            self._zone_name(zone_id),
+            setpoint,
+        )
         self._desired[zone_id] = DesiredZoneState(mode="heat", setpoint=setpoint)
         await self._async_save()
         await self.async_reconcile_zone(zone_id)
